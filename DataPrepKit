@@ -1,0 +1,78 @@
+import pandas as pd
+import os
+
+def read_data(file_path):
+  
+    _, file_extension = os.path.splitext(file_path)
+    if file_extension in ['.csv', '']:
+        return pd.read_csv(file_path)
+    elif file_extension == '.xlsx':
+        return pd.read_excel(file_path)
+    elif file_extension == '.json':
+        return pd.read_json(file_path)
+    else:
+        raise ValueError("Unsupported file type. Supported types: 'csv', 'xlsx', 'json'.")
+
+import numpy as np
+def data_summary(df):
+ 
+    print("Average Values for Numerical Columns:\n")
+    numeric_cols = df.select_dtypes(include=[np.number])
+    averages = numeric_cols.mean()
+    print(averages)
+    
+    print("\nMost Frequent Values for All Columns:\n")
+    for column in df.columns:
+        mode_val = df[column].mode()[0] if not df[column].mode().empty else 'No mode'
+        print(f"{column}: {mode_val}")
+
+
+
+def handle_missing_values(df, strategy='remove', fill_value=None, method='mean'):
+    
+    if strategy == 'remove':
+        return df.dropna()
+    elif strategy == 'fill':
+        return df.fillna(fill_value)
+    elif strategy == 'impute':
+        for column in df.columns:
+            if df[column].dtype == 'object':
+                fill_value = df[column].mode()[0] if method == 'mode' else fill_value
+            else:
+                if method == 'mean':
+                    fill_value = df[column].mean()
+                elif method == 'median':
+                    fill_value = df[column].median()
+                elif method == 'mode':
+                    fill_value = df[column].mode()[0]
+            df[column] = df[column].fillna(fill_value)
+        return df
+    else:
+        raise ValueError("Invalid strategy. Choose 'remove', 'fill', or 'impute'.")
+
+
+
+def encode_categorical_data(df, columns, method='onehot'):
+   
+    if method == 'onehot':
+        return pd.get_dummies(df, columns=columns)
+    elif method == 'label':
+        from sklearn.preprocessing import LabelEncoder
+        le = LabelEncoder()
+        for col in columns:
+            df[col] = le.fit_transform(df[col])
+        return df
+    else:
+        raise ValueError("Invalid method. Choose 'onehot' or 'label'.")
+
+
+
+
+df=read_data(r"C:\Users\Mohammad Almakrami\Desktop\jupyter\business-financial-data-december-2023-quarter-csv.csv")
+
+data_summary(df)
+
+handle_missing_values(df,'fill',22)
+
+encode_categorical_data(df, columns=['Suppressed'],method='label')
+
